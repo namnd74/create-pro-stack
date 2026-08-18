@@ -1,0 +1,31 @@
+{
+  "name": "create-pro-stack",
+  "version": "1.0.0",
+  "description": "Universal Interactive Scaffolding CLI for Next.js and React (Vite)",
+  "type": "module",
+  "bin": {
+    "create-pro-stack": "./bin/index.js"
+  },
+  "scripts": {
+    "start": "node ./bin/index.js"
+  },
+  "keywords": [
+    "react",
+    "nextjs",
+    "vite",
+    "scaffold",
+    "cli",
+    "tanstack-query",
+    "zustand",
+    "shadcn",
+    "storybook"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "dependencies": {
+    "@clack/prompts": "0.8.2",
+    "execa": "^9.5.2",
+    "fs-extra": "^11.3.0",
+    "picocolors": "^1.1.1"
+  }
+}
