@@ -23,6 +23,10 @@
   --input: #cbd5e1;
   --ring: #4f46e5;
   --radius: 0.5rem;
+  --page-gradient:
+    radial-gradient(circle at top left, rgb(165 243 252 / 0.7), transparent 28rem),
+    radial-gradient(circle at 78% 20%, rgb(199 210 254 / 0.78), transparent 32rem),
+    linear-gradient(135deg, #e0f2fe 0%, #f8fafc 44%, #e0e7ff 100%);
 }
 
 .dark {
@@ -45,6 +49,10 @@
   --border: #334155;
   --input: #475569;
   --ring: #a5b4fc;
+  --page-gradient:
+    radial-gradient(circle at top left, rgb(34 211 238 / 0.24), transparent 28rem),
+    radial-gradient(circle at 80% 22%, rgb(129 140 248 / 0.28), transparent 32rem),
+    linear-gradient(135deg, #020617 0%, #0f172a 48%, #1e1b4b 100%);
 }
 
 @theme inline {
@@ -82,5 +90,11 @@
     background: var(--background);
     color: var(--foreground);
     font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .bg-page-gradient {
+    background: var(--page-gradient);
   }
 }
