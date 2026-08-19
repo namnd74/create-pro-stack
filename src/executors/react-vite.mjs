@@ -2,6 +2,7 @@ import { execa } from 'execa';
 import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { installAllDependencies } from '../utils/package-manager.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,29 +10,36 @@ const recipesDir = path.resolve(__dirname, '../recipes');
 
 export async function executeReactVite(projectName, config, spinner) {
   const targetDir = path.resolve(process.cwd(), projectName);
+  const pm = config.packageManager || 'npm';
 
   // 1. RUN OFFICIAL CREATE-VITE (Non-interactive)
-  spinner.message('Scaffolding official React + Vite project...');
-  await execa('npm', ['create', 'vite@latest', projectName, '--', '--template', 'react-ts']);
+  spinner.message(`Scaffolding official React + Vite project (Engine: ${pm})...`);
+  await execa('npx', ['create-vite@latest', projectName, '--template', 'react-ts']);
 
   const mainPkgPath = path.join(targetDir, 'package.json');
   const pkg = await fs.readJson(mainPkgPath);
+  if (!pkg.dependencies) pkg.dependencies = {};
+  if (!pkg.devDependencies) pkg.devDependencies = {};
 
-  const depsToInstall = [
-    'react-router-dom@^7.18.2',
-    'clsx@^2.1.1',
-    'tailwind-merge@^3.6.0',
-  ];
+  // Core base dependencies
+  pkg.dependencies['react-router-dom'] = '^7.18.2';
+  pkg.dependencies['clsx'] = '^2.1.1';
+  pkg.dependencies['tailwind-merge'] = '^3.6.0';
+  pkg.dependencies['class-variance-authority'] = '^0.7.1';
+  pkg.dependencies['tailwindcss-animate'] = '^1.0.7';
+  pkg.dependencies['lucide-react'] = '^1.31.0';
+  pkg.dependencies['react-hook-form'] = '^7.85.0';
+  pkg.dependencies['@hookform/resolvers'] = '^5.9.1';
+  pkg.dependencies['zod'] = '^3.24.2';
 
-  const devDepsToInstall = [
-    'tailwindcss@^3.4.17',
-    'postcss@^8.5.26',
-    'autoprefixer@^10.5.4',
-    'vite-tsconfig-paths@^6.1.1',
-    'prettier@^3.9.6',
-    'prettier-plugin-tailwindcss@^0.8.1',
-    'eslint-config-prettier@^10.1.8',
-  ];
+  // Core base devDependencies
+  pkg.devDependencies['tailwindcss'] = '^3.4.17';
+  pkg.devDependencies['postcss'] = '^8.5.26';
+  pkg.devDependencies['autoprefixer'] = '^10.5.4';
+  pkg.devDependencies['vite-tsconfig-paths'] = '^6.1.1';
+  pkg.devDependencies['prettier'] = '^3.9.6';
+  pkg.devDependencies['prettier-plugin-tailwindcss'] = '^0.8.1';
+  pkg.devDependencies['eslint-config-prettier'] = '^10.1.8';
 
   // Configure tsconfig.app.json paths
   const tsconfigAppPath = path.join(targetDir, 'tsconfig.app.json');
@@ -144,15 +152,8 @@ export default postcssConfig;
   await fs.writeFile(path.join(targetDir, 'postcss.config.mjs'), postcssContent, 'utf-8');
 
   // utils.ts
-  const utilsContent = `import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-`;
   await fs.ensureDir(path.join(targetDir, 'src/lib'));
-  await fs.writeFile(path.join(targetDir, 'src/lib/utils.ts'), utilsContent, 'utf-8');
+  await fs.copy(path.join(recipesDir, 'shared/lib/utils.ts'), path.join(targetDir, 'src/lib/utils.ts'));
 
   // index.css
   const indexCssContent = `@tailwind base;
@@ -227,12 +228,10 @@ export function cn(...inputs: ClassValue[]) {
 
   if (state === 'react-query') {
     spinner.message('Configuring TanStack Query, Axios Client & Zustand...');
-    depsToInstall.push(
-      '@tanstack/react-query@^5.101.4',
-      '@tanstack/react-query-devtools@^5.101.4',
-      'axios@^1.19.0',
-      'zustand@^5.0.15'
-    );
+    pkg.dependencies['@tanstack/react-query'] = '^5.101.4';
+    pkg.dependencies['@tanstack/react-query-devtools'] = '^5.101.4';
+    pkg.dependencies['axios'] = '^1.19.0';
+    pkg.dependencies['zustand'] = '^5.0.15';
 
     await fs.copy(path.join(recipesDir, 'shared/lib/api-client.ts'), path.join(targetDir, 'src/lib/api-client.ts'));
     await fs.copy(path.join(recipesDir, 'shared/lib/query-client.ts'), path.join(targetDir, 'src/lib/query-client.ts'));
@@ -260,7 +259,8 @@ export function App() {
 
   } else if (state === 'redux-toolkit') {
     spinner.message('Configuring Redux Toolkit & RTK Query...');
-    depsToInstall.push('@reduxjs/toolkit@^2.6.1', 'react-redux@^9.2.0');
+    pkg.dependencies['@reduxjs/toolkit'] = '^2.6.1';
+    pkg.dependencies['react-redux'] = '^9.2.0';
 
     await fs.copy(path.join(recipesDir, 'state/redux-toolkit/stores'), path.join(targetDir, 'src/stores'));
 
@@ -287,7 +287,9 @@ export function App() {
 
   } else if (state === 'swr') {
     spinner.message('Configuring SWR, Axios & Zustand...');
-    depsToInstall.push('swr@^2.3.2', 'axios@^1.19.0', 'zustand@^5.0.15');
+    pkg.dependencies['swr'] = '^2.3.2';
+    pkg.dependencies['axios'] = '^1.19.0';
+    pkg.dependencies['zustand'] = '^5.0.15';
 
     await fs.copy(path.join(recipesDir, 'shared/lib/api-client.ts'), path.join(targetDir, 'src/lib/api-client.ts'));
     await fs.copy(path.join(recipesDir, 'shared/stores/use-ui-store.ts'), path.join(targetDir, 'src/stores/use-ui-store.ts'));
@@ -308,56 +310,44 @@ export function App() {
     await fs.writeFile(path.join(targetDir, 'src/App.tsx'), appContent, 'utf-8');
   }
 
-  // 3. INJECT SHADCN UI
-  if (config.uiSystem === 'shadcn') {
-    spinner.message('Configuring shadcn/ui components & Lucide Icons...');
-    depsToInstall.push(
-      'class-variance-authority@^0.7.1',
-      'tailwindcss-animate@^1.0.7',
-      'lucide-react@^1.31.0',
-      'react-hook-form@^7.85.0',
-      '@hookform/resolvers@^5.9.1',
-      'zod@^3.24.2'
-    );
-
-    await fs.writeJson(
-      path.join(targetDir, 'components.json'),
-      {
-        $schema: 'https://ui.shadcn.com/schema.json',
-        style: 'default',
-        rsc: false,
-        tsx: true,
-        tailwind: {
-          config: 'tailwind.config.ts',
-          css: 'src/index.css',
-          baseColor: 'slate',
-          cssVariables: true,
-        },
-        aliases: {
-          components: '@/components',
-          utils: '@/lib/utils',
-          ui: '@/components/ui',
-        },
+  // 3. ALWAYS INJECT SHADCN UI SYSTEM
+  spinner.message('Configuring shadcn/ui components & Lucide Icons...');
+  await fs.writeJson(
+    path.join(targetDir, 'components.json'),
+    {
+      $schema: 'https://ui.shadcn.com/schema.json',
+      style: 'default',
+      rsc: false,
+      tsx: true,
+      tailwind: {
+        config: 'tailwind.config.ts',
+        css: 'src/index.css',
+        baseColor: 'slate',
+        cssVariables: true,
       },
-      { spaces: 2 }
-    );
+      aliases: {
+        components: '@/components',
+        utils: '@/lib/utils',
+        ui: '@/components/ui',
+      },
+    },
+    { spaces: 2 }
+  );
 
-    await fs.copy(path.join(recipesDir, 'shared/components/ui/button.tsx'), path.join(targetDir, 'src/components/ui/button.tsx'));
-    await fs.copy(path.join(recipesDir, 'shared/components/ui/input.tsx'), path.join(targetDir, 'src/components/ui/input.tsx'));
-  }
+  await fs.copy(path.join(recipesDir, 'shared/components/ui/button.tsx'), path.join(targetDir, 'src/components/ui/button.tsx'));
+  await fs.copy(path.join(recipesDir, 'shared/components/ui/input.tsx'), path.join(targetDir, 'src/components/ui/input.tsx'));
 
-  // 4. INJECT STORYBOOK
-  if (config.addons.includes('storybook')) {
+  // 4. INJECT STORYBOOK (Optional Addon)
+  const addons = config.addons || [];
+  if (addons.includes('storybook')) {
     spinner.message('Configuring Storybook & Auto-story generator script...');
-    devDepsToInstall.push(
-      'storybook@^8.6.14',
-      '@storybook/react-vite@^8.6.14',
-      '@storybook/react@^8.6.14',
-      '@storybook/addon-essentials@^8.6.14',
-      '@storybook/addon-interactions@^8.6.14',
-      '@storybook/addon-links@^8.6.14',
-      '@storybook/blocks@^8.6.14'
-    );
+    pkg.devDependencies['storybook'] = '^8.6.14';
+    pkg.devDependencies['@storybook/react-vite'] = '^8.6.14';
+    pkg.devDependencies['@storybook/react'] = '^8.6.14';
+    pkg.devDependencies['@storybook/addon-essentials'] = '^8.6.14';
+    pkg.devDependencies['@storybook/addon-interactions'] = '^8.6.14';
+    pkg.devDependencies['@storybook/addon-links'] = '^8.6.14';
+    pkg.devDependencies['@storybook/blocks'] = '^8.6.14';
 
     await fs.copy(path.join(recipesDir, 'react-vite/.storybook'), path.join(targetDir, '.storybook'));
     await fs.copy(path.join(recipesDir, 'shared/scripts/add-ui.mjs'), path.join(targetDir, 'scripts/add-ui.mjs'));
@@ -371,15 +361,13 @@ export function App() {
     };
   }
 
-  // 5. INJECT HUSKY & COMMITLINT
-  if (config.addons.includes('husky')) {
+  // 5. INJECT HUSKY & COMMITLINT (Optional Addon)
+  if (addons.includes('husky')) {
     spinner.message('Configuring Husky, Commitlint & lint-staged...');
-    devDepsToInstall.push(
-      'husky@^9.1.7',
-      'lint-staged@^17.3.0',
-      '@commitlint/cli@^21.2.2',
-      '@commitlint/config-conventional@^21.2.2'
-    );
+    pkg.devDependencies['husky'] = '^9.1.7';
+    pkg.devDependencies['lint-staged'] = '^17.3.0';
+    pkg.devDependencies['@commitlint/cli'] = '^21.2.2';
+    pkg.devDependencies['@commitlint/config-conventional'] = '^21.2.2';
 
     await fs.copy(path.join(recipesDir, 'shared/husky/.commitlintrc.json'), path.join(targetDir, '.commitlintrc.json'));
     await fs.copy(path.join(recipesDir, 'shared/husky/.husky'), path.join(targetDir, '.husky'));
@@ -397,15 +385,23 @@ export function App() {
     };
   }
 
+  // 6. INJECT AI AGENT SKILLS & WORKFLOWS (Optional Addon)
+  if (addons.includes('agents')) {
+    spinner.message('Injecting AI Agent Skills (.agents/skills) & Workflows...');
+    await fs.copy(path.join(recipesDir, 'shared/AGENTS.md'), path.join(targetDir, 'AGENTS.md'));
+    await fs.copy(path.join(recipesDir, 'shared/.agents'), path.join(targetDir, '.agents'));
+
+    pkg.scripts = {
+      ...pkg.scripts,
+      'skill:add-vercel': 'npx skills add vercel-labs/agent-skills --skill react-best-practices',
+      'skill:add-composition': 'npx skills add vercel-labs/agent-skills --skill composition-patterns',
+    };
+  }
+
   // Write updated package.json
   await fs.writeJson(mainPkgPath, pkg, { spaces: 2 });
 
-  // 6. INSTALL PACKAGES
-  spinner.message('Installing dependencies...');
-  if (depsToInstall.length > 0) {
-    await execa('npm', ['install', ...depsToInstall, '--legacy-peer-deps'], { cwd: targetDir });
-  }
-  if (devDepsToInstall.length > 0) {
-    await execa('npm', ['install', '-D', ...devDepsToInstall, '--legacy-peer-deps'], { cwd: targetDir });
-  }
+  // 6. SINGLE-PASS DEPENDENCY INSTALLATION
+  spinner.message(`Installing dependencies in a single pass via [${pm}]...`);
+  await installAllDependencies(targetDir, pm);
 }

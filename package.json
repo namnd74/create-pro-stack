@@ -1,13 +1,24 @@
 {
   "name": "create-pro-stack",
   "version": "1.0.0",
-  "description": "Universal Interactive Scaffolding CLI for Next.js and React (Vite)",
+  "description": "Universal Enterprise Scaffolding CLI for Next.js and React (Vite) with shadcn/ui",
   "type": "module",
   "bin": {
     "create-pro-stack": "./bin/index.js"
   },
   "scripts": {
-    "start": "node ./bin/index.js"
+    "start": "node ./bin/index.js",
+    "test:pack": "npm pack --dry-run"
+  },
+  "files": [
+    "bin",
+    "src",
+    ".agents",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
   },
   "keywords": [
     "react",
@@ -15,9 +26,11 @@
     "vite",
     "scaffold",
     "cli",
+    "shadcn-ui",
     "tanstack-query",
     "zustand",
-    "shadcn",
+    "redux-toolkit",
+    "swr",
     "storybook"
   ],
   "author": "Antigravity",
