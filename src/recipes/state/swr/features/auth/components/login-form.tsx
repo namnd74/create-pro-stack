@@ -1,4 +1,5 @@
-import React from 'react';
+'use client';
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginFormData } from '../schemas/auth.schema';
@@ -45,26 +46,34 @@ export function LoginForm() {
       )}
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Email</label>
+        <label htmlFor="email" className="text-sm font-medium">Email</label>
         <Input
+          id="email"
           type="email"
           placeholder="name@example.com"
+          autoComplete="email"
+          aria-invalid={Boolean(errors.email)}
+          aria-describedby={errors.email ? 'email-error' : undefined}
           {...register('email')}
         />
         {errors.email && (
-          <p className="text-xs text-destructive">{errors.email.message}</p>
+          <p id="email-error" className="text-xs text-destructive">{errors.email.message}</p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Password</label>
+        <label htmlFor="password" className="text-sm font-medium">Password</label>
         <Input
+          id="password"
           type="password"
           placeholder="••••••••"
+          autoComplete="current-password"
+          aria-invalid={Boolean(errors.password)}
+          aria-describedby={errors.password ? 'password-error' : undefined}
           {...register('password')}
         />
         {errors.password && (
-          <p className="text-xs text-destructive">{errors.password.message}</p>
+          <p id="password-error" className="text-xs text-destructive">{errors.password.message}</p>
         )}
       </div>
 

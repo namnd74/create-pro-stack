@@ -1,13 +1,30 @@
-import React from 'react';
+'use client';
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginFormData } from '../schemas/auth.schema';
 import { useLoginMutation } from '../api/auth-api';
+import { setCredentials } from '../store/auth-slice';
 import { useAppDispatch } from '@/stores/hooks';
-import { setCredentials } from '@/stores/slices/auth-slice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
+
+function getErrorMessage(error: unknown) {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'data' in error &&
+    typeof error.data === 'object' &&
+    error.data !== null &&
+    'message' in error.data &&
+    typeof error.data.message === 'string'
+  ) {
+    return error.data.message;
+  }
+
+  return 'Authentication failed';
+}
 
 export function LoginForm() {
   const [login, { isLoading, error }] = useLoginMutation();
@@ -31,7 +48,7 @@ export function LoginForm() {
       const response = await login(data).unwrap();
       dispatch(setCredentials({ user: response.user, accessToken: response.accessToken }));
       alert('Signed in successfully with Redux Toolkit!');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login error', err);
     }
   };
@@ -44,32 +61,40 @@ export function LoginForm() {
       </div>
 
       {error && (
-        <div className="p-3 text-sm rounded-md bg-destructive/15 text-destructive border border-destructive/30">
-          {'data' in error ? (error.data as any)?.message || 'Authentication failed' : 'Authentication failed'}
+        <div role="alert" className="p-3 text-sm rounded-md bg-destructive/15 text-destructive border border-destructive/30">
+          {getErrorMessage(error)}
         </div>
       )}
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Email</label>
+        <label htmlFor="email" className="text-sm font-medium">Email</label>
         <Input
+          id="email"
           type="email"
           placeholder="name@example.com"
+          autoComplete="email"
+          aria-invalid={Boolean(errors.email)}
+          aria-describedby={errors.email ? 'email-error' : undefined}
           {...register('email')}
         />
         {errors.email && (
-          <p className="text-xs text-destructive">{errors.email.message}</p>
+          <p id="email-error" className="text-xs text-destructive">{errors.email.message}</p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Password</label>
+        <label htmlFor="password" className="text-sm font-medium">Password</label>
         <Input
+          id="password"
           type="password"
           placeholder="••••••••"
+          autoComplete="current-password"
+          aria-invalid={Boolean(errors.password)}
+          aria-describedby={errors.password ? 'password-error' : undefined}
           {...register('password')}
         />
         {errors.password && (
-          <p className="text-xs text-destructive">{errors.password.message}</p>
+          <p id="password-error" className="text-xs text-destructive">{errors.password.message}</p>
         )}
       </div>
 

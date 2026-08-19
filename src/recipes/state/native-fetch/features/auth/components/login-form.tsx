@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState } from 'react';
+import { useActionState } from 'react';
 import { loginAction, type ActionState } from '../actions/auth.action';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ export function LoginForm() {
 
       {state?.message && (
         <div
+          role={state.success ? 'status' : 'alert'}
           className={`p-3 text-sm rounded-md border ${
             state.success
               ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30 dark:text-emerald-400'
@@ -31,28 +32,36 @@ export function LoginForm() {
       )}
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Email</label>
+        <label htmlFor="email" className="text-sm font-medium">Email</label>
         <Input
+          id="email"
           type="email"
           name="email"
           placeholder="name@example.com"
+          autoComplete="email"
+          aria-invalid={Boolean(state?.errors?.email)}
+          aria-describedby={state?.errors?.email ? 'email-error' : undefined}
           required
         />
         {state?.errors?.email && (
-          <p className="text-xs text-destructive">{state.errors.email[0]}</p>
+          <p id="email-error" className="text-xs text-destructive">{state.errors.email[0]}</p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Password</label>
+        <label htmlFor="password" className="text-sm font-medium">Password</label>
         <Input
+          id="password"
           type="password"
           name="password"
           placeholder="••••••••"
+          autoComplete="current-password"
+          aria-invalid={Boolean(state?.errors?.password)}
+          aria-describedby={state?.errors?.password ? 'password-error' : undefined}
           required
         />
         {state?.errors?.password && (
-          <p className="text-xs text-destructive">{state.errors.password[0]}</p>
+          <p id="password-error" className="text-xs text-destructive">{state.errors.password[0]}</p>
         )}
       </div>
 

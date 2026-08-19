@@ -1,19 +1,19 @@
 # 🎨 Workflow: UI Component & Storybook Generation
 
 ## 🎯 Purpose:
-Add new shadcn/ui components or create custom compound UI primitives, automatically configuring Storybook stories and maintaining accessibility standards.
+Add new shadcn/ui components or create custom compound UI primitives, then document them in Storybook while maintaining accessibility standards.
 
 ---
 
 ## 🚦 Execution Steps
 
 ### 🔹 Step 1: Add Component
-- Run: `npm run ui:add <component_name>` (e.g. `npm run ui:add dialog`).
+- Run the official shadcn/ui CLI: `npx shadcn@latest add <component_name>` (e.g. `npx shadcn@latest add dialog`).
 - Verify the file is generated in `src/components/ui/<component_name>.tsx`.
 
-### 🔹 Step 2: Auto-Generate Storybook Story
-- The script automatically generates `src/components/ui/<component_name>.stories.tsx`.
-- Review the generated story to add rich variant examples (e.g. Primary, Secondary, Destructive, Disabled, Loading).
+### 🔹 Step 2: Create Storybook Story
+- Create `src/components/ui/<component_name>.stories.tsx`.
+- Add rich variant examples (e.g. Primary, Secondary, Destructive, Disabled, Loading).
 
 ### 🔹 Step 3: Compound Component Composition
 - When building custom components, compose existing shadcn primitives instead of creating large monoliths with dozens of boolean props.

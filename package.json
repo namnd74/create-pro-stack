@@ -1,24 +1,24 @@
 {
   "name": "create-pro-stack",
   "version": "1.0.0",
-  "description": "Universal Enterprise Scaffolding CLI for Next.js and React (Vite) with shadcn/ui",
+  "description": "Opinionated scaffolding CLI for Next.js and React (Vite) apps with shadcn/ui",
   "type": "module",
   "bin": {
     "create-pro-stack": "./bin/index.js"
   },
   "scripts": {
     "start": "node ./bin/index.js",
-    "test:pack": "npm pack --dry-run"
+    "test": "node --test",
+    "test:pack": "npm_config_cache=.npm-cache npm pack --dry-run"
   },
   "files": [
     "bin",
     "src",
-    ".agents",
     "README.md",
     "LICENSE"
   ],
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.12.0"
   },
   "keywords": [
     "react",
@@ -36,9 +36,10 @@
   "author": "Antigravity",
   "license": "MIT",
   "dependencies": {
-    "@clack/prompts": "0.8.2",
-    "execa": "^9.5.2",
-    "fs-extra": "^11.3.0",
+    "@clack/prompts": "^1.7.0",
+    "execa": "^10.0.1",
+    "fs-extra": "^11.4.0",
+    "jsonc-parser": "^3.3.1",
     "picocolors": "^1.1.1"
   }
 }

@@ -1,157 +1,138 @@
-# 🚀 create-pro-stack
+# create-pro-stack
 
-> **The Universal, Zero-Boilerplate Architecture Generator for Modern Web Applications.**  
-> Effortlessly scaffold production-ready **Next.js** and **React + Vite** projects with battle-tested enterprise architectures and built-in **shadcn/ui**.
+A CLI for scaffolding opinionated Next.js and React + Vite apps with feature-based architecture, shadcn/ui, typed validation, and optional project tooling.
 
----
+It uses the official framework starters (`create-next-app` and `create-vite`) first, then adds a consistent application structure and selected libraries.
 
-## ✨ Features
+Requires Node.js 22.12 or newer.
 
-- **⚡ Orchestrator Engine (100% Future-Proof & Multi-Package-Manager)**:
-  - Invokes official `create-next-app` or `create-vite` under the hood.
-  - Automatically detects your package manager (`pnpm`, `bun`, `yarn`, `npm`) and executes single-pass installs.
-  - Fetches the latest framework releases, compiler optimizations, and preserves Next.js fonts (Geist / Inter).
-- **🏛️ Feature-Driven Clean Architecture**:
-  - Organized by domain/business modules (`src/features/`) with co-located schemas, API hooks, components, and types.
-- **🔄 4 Modular State & Data Fetching Stacks**:
-  - **TanStack Query + Axios + Zustand** (Recommended for Dashboards & SaaS)
-  - **Redux Toolkit + RTK Query** (All-in-one Enterprise Redux state & caching)
-  - **SWR + Axios + Zustand** (Lightweight Vercel standard)
-  - **Next.js Native** (Server Actions + Zustand, 0 KB client fetch library)
-- **🎨 Built-in Standard UI System (100% shadcn/ui)**:
-  - Pre-configured **shadcn/ui** + **Tailwind CSS** + **Lucide Icons** + **CVA** (Class Variance Authority) + **React Hook Form** + **Zod**.
-- **📚 Storybook Integration**:
-  - Auto-configured for Next.js and Vite.
-  - Includes custom `ui:add <component>` script to pull shadcn components and automatically generate Storybook stories (`.stories.tsx`).
-- **🛡️ Quality & Git Standards**:
-  - Pre-configured **Husky**, **Commitlint** (Conventional Commits), **lint-staged**, **ESLint**, and **Prettier** with automatic Tailwind class sorting.
-- **🌐 Universal Utility Hooks & Global Types**:
-  - `useDebounce`, `useMounted` (SSR hydration-safe), `useMediaQuery`.
-  - Standardized `ApiResponse<T>`, `PaginatedResponse<T>`, and `ApiError` interfaces.
-- **🤖 Built-in AI Agent Skills & Vercel Best Practices**:
-  - Auto-injects `AGENTS.md` and `.cursorrules` into every generated project.
-  - Enforces Vercel Engineering's 70+ performance rules (anti-waterfall `async-parallel`, bundle optimization, RSC security).
-  - Out-of-the-box scripts to pull official Vercel skills: `npm run skill:add-vercel`.
+## Quick Start
 
----
-
-## 🚀 Quick Start
-
-### 1. Interactive Mode:
 ```bash
-# Using NPX / NPM
 npx create-pro-stack
+```
 
-# Using PNPM
+```bash
 pnpm create pro-stack
+```
 
-# Using Bun
+```bash
 bunx create-pro-stack
 ```
 
-### 2. Non-Interactive (CLI Flags / CI/CD):
+## Examples
+
 ```bash
-npx create-pro-stack my-app --framework nextjs --state react-query --agents --storybook --husky -y
+npx create-pro-stack my-app --framework nextjs --state react-query -y
 ```
 
-| Flag | Description | Options |
+```bash
+pnpm create pro-stack my-app --framework react-vite --state swr --storybook -y
+```
+
+```bash
+npx create-pro-stack my-app --framework nextjs --state native-fetch --no-agents -y
+```
+
+## CLI Options
+
+| Option | Description | Values |
 | :--- | :--- | :--- |
-| `[project-name]` | Positional name of project directory | e.g. `my-app` |
-| `--framework`, `-f` | Target web framework | `nextjs`, `react-vite` |
-| `--state`, `-s` | State & data fetching stack | `react-query`, `redux-toolkit`, `swr`, `native-fetch` |
-| `--agents` / `--no-agents` | Include AI Agent Skills & Workflows | Flag (Default: true) |
-| `--storybook` | Include Storybook addon | Flag |
-| `--husky` | Include Husky + Commitlint addon | Flag |
-| `-y`, `--yes` | Accept defaults / skip prompts | Flag |
+| `[project-name]` | Target folder name. Must be a simple folder name, not a path. | `my-app` |
+| `--framework`, `-f` | Framework to scaffold. | `nextjs`, `react-vite` |
+| `--state`, `-s` | State and data-fetching stack. | `react-query`, `redux-toolkit`, `swr`, `native-fetch` |
+| `--agents` / `--no-agents` | Include AI agent guidance files. | default: enabled |
+| `--storybook` | Add Storybook config and starter stories. | flag |
+| `--husky` | Add Husky, Commitlint, and lint-staged. | flag |
+| `-y`, `--yes` | Skip prompts and use provided/default options. | flag |
 
----
+Safety rules:
 
-## 🧭 Interactive Prompt Walkthrough
+- Project names cannot be `.`, `..`, absolute paths, or nested paths like `../app`.
+- The CLI refuses to scaffold directly into the current working directory.
+- Existing valid target folders require confirmation unless `-y` is used.
 
-```text
-┌  🚀 UNIVERSAL PRO STACK SCAFFOLDER 🚀
-│
-◇  What is your project named?
-│  my-pro-app
-│
-◇  Select a framework:
-│  ● Next.js (App Router, RSC, SSR/SSG)
-│  ○ React + Vite (SPA, React Router)
-│
-◇  Select State Management & Data Fetching architecture:
-│  ● TanStack Query + Axios + Zustand (Recommended)
-│  ○ Redux Toolkit + RTK Query
-│  ○ SWR + Axios + Zustand
-│  ○ Next.js Native (Server Actions + Zustand)
-│
-◇  Select optional tools (Addons):
-│  ◼ AI Agent Skills & Workflows (.agents/ & AGENTS.md)
-│  ◼ Storybook (Auto-generate stories on ui:add)
-│  ◼ Husky + Commitlint + lint-staged
-│
-└  🎉 Successfully created my-pro-app!
-```
+## Generated Stack
 
----
+Frameworks:
 
-## 📁 Generated Project Structure
+- Next.js App Router
+- React + Vite
+
+State and data-fetching options:
+
+- TanStack Query + Axios + Zustand
+- Redux Toolkit + RTK Query
+- SWR + Axios + Zustand
+- Next.js native Server Actions + Zustand
+
+Included foundation:
+
+- Feature-based folders under `src/features`
+- Shared hooks, types, and `src/lib` helpers
+- shadcn/ui-compatible `components.json`
+- Tailwind CSS v4 setup without `tailwind.config.ts`
+- `button` and `input` added through the official shadcn/ui CLI
+- Zod + React Hook Form setup in the auth reference feature
+
+Optional tooling:
+
+- Storybook
+- Husky, Commitlint, and lint-staged
+- `AGENTS.md` and `.agents` workflow files for generated projects
+
+## Generated Structure
 
 ```text
 my-app/
-├── .agents/                        # AI Agent Specification (skills.sh standard)
-│   ├── skills/
-│   │   └── pro-stack-architect/
-│   │       └── SKILL.md            # Enterprise architecture & Vercel rules
-│   └── workflows/                  # Actionable step-by-step developer pipelines
-│       ├── 1-new-feature.md
-│       ├── 2-performance-audit.md
-│       ├── 3-ui-to-storybook.md
-│       └── 4-pre-release-check.md
-├── .husky/                         # Git hooks (pre-commit, commit-msg)
-├── .storybook/                     # Storybook configuration
-├── scripts/
-│   └── add-ui.mjs                  # Script: downloads shadcn UI + generates Storybook
 ├── src/
-│   ├── app/ (or routes/)           # Application Shell & Routing
-│   ├── components/                 # Shared UI Components
-│   │   └── ui/                     # shadcn/ui primitives (button, input...)
-│   ├── features/                   # Domain-driven Modules (Business Logic)
-│   │   └── auth/                   # Reference Auth Module:
-│   │       ├── api/                # API hooks (React Query / RTK Query / SWR / Action)
-│   │       ├── components/         # login-form.tsx (React Hook Form + Zod + UI)
-│   │       ├── schemas/            # auth.schema.ts (Zod validation)
-│   │       └── types/              # DTOs & Domain interfaces
-│   ├── hooks/                      # Universal Utility Hooks
-│   │   ├── use-debounce.ts
-│   │   ├── use-mounted.ts          # Hydration-safe guard
-│   │   └── use-media-query.ts
-│   ├── lib/                        # Third-party configurations (apiClient, queryClient, utils)
-│   ├── stores/                     # Client State (Zustand store or Redux store)
-│   └── types/                      # Global Base Types (ApiResponse, Pagination)
-├── .commitlintrc.json
-├── .prettierrc
-├── AGENTS.md                       # AI Agent guidelines & Vercel Best Practices
-├── components.json                 # shadcn/ui configuration
-└── package.json
+│   ├── app/ or routes/
+│   ├── components/
+│   │   └── ui/
+│   ├── features/
+│   │   └── auth/
+│   ├── hooks/
+│   ├── lib/
+│   ├── stores/
+│   └── types/
+├── components.json
+├── package.json
+└── AGENTS.md / .agents/   # when agents are enabled
 ```
 
----
+## shadcn/ui
 
-## 🛠️ Handy Package Scripts
+Generated projects use the official shadcn/ui CLI directly:
 
-| Command | Description |
-| :--- | :--- |
-| `npm run dev` (or `pnpm dev` / `bun dev`) | Starts the local development server |
-| `npm run build` | Builds the production bundle |
-| `npm run storybook` | Starts the Storybook UI component explorer |
-| `npm run build-storybook` | Exports a static Storybook documentation site |
-| `npm run ui:add <component>` | Adds a shadcn component and **auto-generates its story** |
-| `npm run skill:add-vercel` | Pulls official Vercel React Performance Best Practices skill |
-| `npm run skill:add-composition` | Pulls official Vercel React Composition Patterns skill |
-| `npm run format` | Auto-formats codebase with Prettier |
+```bash
+npx shadcn@latest add button
+```
 
----
+## Development
 
-## 📄 License
+```bash
+npm test
+```
 
-MIT © Antigravity. Free for personal and commercial use.
+```bash
+npm run test:pack
+```
+
+`test:pack` uses a local `.npm-cache` folder so it does not depend on the machine's global npm cache.
+
+## Publish Checklist
+
+```bash
+npm test
+npm run test:pack
+npm login
+npm whoami
+npm version patch
+npm publish --access public
+```
+
+After publishing to npm, the package can be used with `npx`, `pnpm create`, `pnpm dlx`, and `bunx`.
+
+## License
+
+MIT

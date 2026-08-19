@@ -36,10 +36,10 @@ export async function loginAction(
       success: true,
       message: 'Successfully authenticated via Server Action!',
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       success: false,
-      message: err.message || 'Authentication failed',
+      message: err instanceof Error ? err.message : 'Authentication failed',
     };
   }
 }

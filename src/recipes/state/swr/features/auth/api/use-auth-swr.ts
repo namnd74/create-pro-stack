@@ -9,7 +9,7 @@ import type { ApiResponse } from '@/types/api';
  * SWR Hook to fetch current user profile
  */
 export function useProfile() {
-  return useSWR<ApiResponse<User>>('/auth/me', (url: string) => apiClient.get(url), {
+  return useSWR<ApiResponse<User>>('/auth/me', (url: string) => apiClient.get<never, ApiResponse<User>>(url), {
     revalidateOnFocus: false,
     shouldRetryOnError: false,
   });
@@ -29,16 +29,17 @@ export function useLogin() {
     setIsPending(true);
     setError(null);
     try {
-      const response = await apiClient.post<ApiResponse<AuthResponse>>('/auth/login', credentials);
+      const response = await apiClient.post<never, ApiResponse<AuthResponse>>('/auth/login', credentials);
       if (typeof window !== 'undefined' && response.data?.accessToken) {
         localStorage.setItem('access_token', response.data.accessToken);
       }
       // Revalidate user profile in SWR cache
       mutate('/auth/me');
-      options?.onSuccess?.(response as any);
+      options?.onSuccess?.(response);
       return response;
-    } catch (err: any) {
-      setError(err);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error('Authentication failed');
+      setError(error);
       throw err;
     } finally {
       setIsPending(false);

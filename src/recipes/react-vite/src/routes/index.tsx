@@ -1,8 +1,10 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import { AuthLayout } from '@/layouts/auth-layout';
 import { DashboardLayout } from '@/layouts/dashboard-layout';
 import { ProtectedRoute } from './protected-route';
 import { DashboardHome } from '@/features/dashboard/components/dashboard-home';
+import { LoginForm } from '@/features/auth/components/login-form';
+import { StarterHome } from '@/features/home/components/starter-home';
 
 export const router = createBrowserRouter([
   {
@@ -10,12 +12,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/login',
-        element: (
-          <div className="text-center">
-            <h2 className="text-2xl font-bold">Login Page</h2>
-            <p className="text-muted-foreground mt-2">Sign in to your account</p>
-          </div>
-        ),
+        element: <LoginForm />,
       },
     ],
   },
@@ -34,7 +31,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/',
-    element: <Navigate to="/dashboard" replace />,
+    element: <StarterHome authHref="/login" secondaryHref="/dashboard" secondaryLabel="Open dashboard" />,
   },
   {
     path: '*',

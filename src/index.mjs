@@ -2,56 +2,43 @@ import * as p from '@clack/prompts';
 import color from 'picocolors';
 import fs from 'fs-extra';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { executeNextJs } from './executors/nextjs.mjs';
 import { executeReactVite } from './executors/react-vite.mjs';
 import { detectPackageManager, getRunCommand } from './utils/package-manager.mjs';
-
-function parseCliArgs() {
-  const args = process.argv.slice(2);
-  const options = {
-    projectName: '',
-    framework: '',
-    stateStack: '',
-    addons: [],
-    yes: false,
-  };
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg === '-y' || arg === '--yes') {
-      options.yes = true;
-    } else if (arg === '--framework' || arg === '-f') {
-      options.framework = args[++i];
-    } else if (arg === '--state' || arg === '-s') {
-      options.stateStack = args[++i];
-    } else if (arg === '--agents') {
-      if (!options.addons.includes('agents')) options.addons.push('agents');
-    } else if (arg === '--no-agents') {
-      options.noAgents = true;
-    } else if (arg === '--storybook') {
-      if (!options.addons.includes('storybook')) options.addons.push('storybook');
-    } else if (arg === '--husky') {
-      if (!options.addons.includes('husky')) options.addons.push('husky');
-    } else if (!arg.startsWith('-') && !options.projectName) {
-      options.projectName = arg;
-    }
-  }
-
-  return options;
-}
+import {
+  assertSafeTargetDir,
+  getDefaultAddons,
+  parseCliArgs,
+  validateConfig,
+  validateFramework,
+  validateProjectName,
+  validateStateStack,
+} from './utils/cli-options.mjs';
 
 export async function runCli() {
   console.clear();
-  p.intro(color.bgCyan(color.black(' 🚀 UNIVERSAL PRO STACK SCAFFOLDER 🚀 ')));
+  p.intro(color.bgCyan(color.black(' create-pro-stack ')));
 
   const pm = detectPackageManager();
   const cliArgs = parseCliArgs();
 
-  // Default addons: include 'agents' unless --no-agents was explicitly passed
-  const defaultAddons = cliArgs.noAgents ? cliArgs.addons : (cliArgs.addons.length > 0 ? cliArgs.addons : ['agents']);
+  const cliValidationErrors = [
+    cliArgs.projectName ? validateProjectName(cliArgs.projectName) : undefined,
+    cliArgs.framework ? validateFramework(cliArgs.framework) : undefined,
+    cliArgs.stateStack ? validateStateStack(cliArgs.stateStack, cliArgs.framework || 'nextjs') : undefined,
+  ].filter(Boolean);
+  if (cliValidationErrors.length > 0) {
+    p.cancel(color.red(cliValidationErrors.join('\n')));
+    process.exit(1);
+  }
+
+  // Default addons: include 'agents' unless --no-agents was explicitly passed.
+  const defaultAddons = getDefaultAddons(cliArgs);
+  const defaultProjectName = cliArgs.projectName || 'my-pro-app';
 
   let config = {
-    projectName: cliArgs.projectName || 'my-pro-app',
+    projectName: defaultProjectName,
     framework: cliArgs.framework || 'nextjs',
     stateStack: cliArgs.stateStack || 'react-query',
     addons: defaultAddons,
@@ -66,12 +53,10 @@ export async function runCli() {
         projectName: () =>
           p.text({
             message: 'What is your project named?',
-            placeholder: 'my-pro-app',
-            defaultValue: cliArgs.projectName || 'my-pro-app',
+            placeholder: defaultProjectName,
+            defaultValue: defaultProjectName,
             validate: (val) => {
-              if (!val || val.trim() === '') return 'Please provide a project name!';
-              if (!/^[a-zA-Z0-9-_]+$/.test(val))
-                return 'Project name can only include letters, numbers, hyphens (-), or underscores (_)';
+              return validateProjectName(resolveProjectNameInput(val, defaultProjectName));
             },
           }),
 
@@ -151,7 +136,7 @@ export async function runCli() {
               },
               {
                 value: 'storybook',
-                label: 'Storybook (Auto-generate stories on ui:add)',
+                label: 'Storybook (Component documentation & preview)',
                 hint: 'Component documentation & preview',
               },
               {
@@ -175,11 +160,24 @@ export async function runCli() {
     config = {
       ...config,
       ...promptResults,
+      projectName: resolveProjectNameInput(promptResults.projectName, defaultProjectName),
       packageManager: pm,
     };
   }
 
+  const configValidationErrors = validateConfig(config);
+  if (configValidationErrors.length > 0) {
+    p.cancel(color.red(configValidationErrors.join('\n')));
+    process.exit(1);
+  }
+
   const targetDir = path.resolve(process.cwd(), config.projectName);
+  try {
+    assertSafeTargetDir(targetDir);
+  } catch (err) {
+    p.cancel(color.red(err.message));
+    process.exit(1);
+  }
 
   if (fs.existsSync(targetDir)) {
     if (!cliArgs.yes) {
@@ -213,7 +211,6 @@ export async function runCli() {
 
   const devCmd = getRunCommand(pm, 'dev');
   const storybookCmd = getRunCommand(pm, 'storybook');
-  const uiAddCmd = getRunCommand(pm, 'ui:add', 'button');
 
   p.outro(`✨ Project ${color.bold(color.green(config.projectName))} is ready!
   
@@ -221,11 +218,21 @@ export async function runCli() {
   ${color.cyan(`cd ${config.projectName}`)}
   ${color.cyan(devCmd)}
   ${config.addons.includes('storybook') ? color.dim('\n  Launch Storybook:') + '\n  ' + color.cyan(storybookCmd) : ''}
-  ${config.addons.includes('storybook') ? color.dim('\n  Add shadcn component & auto-generate story:') + '\n  ' + color.cyan(uiAddCmd) : ''}
+  ${color.dim('\n  Add shadcn/ui components directly:')}
+  ${color.cyan('npx shadcn@latest add button')}
   `);
 }
 
-runCli().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+export function resolveProjectNameInput(value, defaultProjectName = 'my-pro-app') {
+  return typeof value === 'string' && value.length > 0 ? value : defaultProjectName;
+}
+
+const isDirectRun =
+  process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectRun) {
+  runCli().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

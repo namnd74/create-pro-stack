@@ -1,7 +1,15 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+
+const nodeEnv = (
+  globalThis as typeof globalThis & {
+    process?: { env?: Record<string, string | undefined> };
+  }
+).process?.env;
+
+const viteEnv = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
 
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || (typeof import.meta !== 'undefined' ? (import.meta as any).env?.VITE_API_URL : undefined) || '/api',
+  baseURL: nodeEnv?.NEXT_PUBLIC_API_URL || viteEnv?.VITE_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -24,9 +32,9 @@ apiClient.interceptors.request.use(
 
 // Response Interceptor with Token Refresh Mutex
 let isRefreshing = false;
-let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: any) => void }> = [];
+let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => (token ? prom.resolve(token) : prom.reject(error)));
   failedQueue = [];
 };
@@ -50,8 +58,11 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await axios.post('/api/auth/refresh');
-        const newToken = (data as any).access_token;
+        const { data } = await axios.post<{ access_token?: string }>('/api/auth/refresh');
+        const newToken = data.access_token;
+        if (!newToken) {
+          throw new Error('Refresh response did not include an access token.');
+        }
         localStorage.setItem('access_token', newToken);
         processQueue(null, newToken);
         return apiClient(originalRequest);
