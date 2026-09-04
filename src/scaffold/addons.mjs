@@ -89,7 +89,7 @@ export async function applyAgentsAddon({ targetDir, pkg }) {
   await fs.copy(path.join(recipesDir, 'shared/.agents'), path.join(targetDir, '.agents'));
 
   addScripts(pkg, {
-    'skill:add-vercel': 'npx skills add vercel-labs/agent-skills --skill react-best-practices',
-    'skill:add-composition': 'npx skills add vercel-labs/agent-skills --skill composition-patterns',
+    'skill:add-vercel': 'npx skills add vercel-labs/agent-skills --skill vercel-react-best-practices',
+    'skill:add-composition': 'npx skills add vercel-labs/agent-skills --skill vercel-composition-patterns',
   });
 }
